@@ -1,0 +1,47 @@
+# ChaTTY
+
+A Python terminal chat client for compatible Responses, Chat Completions, and Messages HTTP endpoints. Python 3.9 or newer is recommended.
+
+```powershell
+python chatty.py
+```
+
+Use `/connections` to add, edit, list, or delete saved connections, then `/connect` to select one. Type a message to chat. `/model NAME` and `/reasoning LEVEL` change the active session; `/reasoning off` clears the setting. `/new` starts a new conversation, `/image PATH` attaches an image to the next message, and `/quit` exits. In the connection editor, enter `:clear` to remove a field. Changes to the active model and reasoning level last for the session; use the connection manager to save them.
+
+## Command line
+
+```powershell
+python chatty.py --url http://localhost:11434/v1 --protocol chat --model llama3.2 -save local
+python chatty.py -c local "Explain this image" -i picture.png
+python chatty.py -c local "Write a haiku" -o poem.txt
+python chatty.py --url https://example.com/v1 --api-key KEY --protocol responses --model MODEL -save work "Hello"
+python chatty.py --list
+python chatty.py --delete work
+```
+
+`--url` may be a base URL (including the provider's API prefix, usually `/v1`) or the full protocol endpoint. `--image` can be repeated. Options supplied with `--connection` override saved values. Saving an existing name replaces it. `--reasoning off` clears a saved value for that invocation. `--config PATH` or `CHATTY_CONFIG` selects a config file; otherwise it is `~/.config/chatty/connections.json`. API keys are stored **in plain text** in this file. Restrict access to it as appropriate.
+
+```json
+{
+  "connections": {
+    "example": {
+      "url": "https://api.openai.com/v1",
+      "protocol": "responses",
+      "api_key": "your-key",
+      "model": "your-model",
+      "reasoning": "medium"
+    }
+  }
+}
+```
+
+## Environment connections
+
+The app detects environment settings at startup and lists them with an `env:` prefix. They are not written to JSON unless explicitly saved with `-c env:NAME -save NAME`. It recognizes `OPENAI_BASE_URL`, `OPENAI_API_BASE`, `OPENAI_API_KEY`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_KEY`, `LITELLM_BASE_URL`, `LITELLM_API_BASE`, `LITELLM_URL`, `LITELLM_API_KEY`, `LITELLM_MASTER_KEY`, `OLLAMA_HOST`, `OLLAMA_BASE_URL`, `OLLAMA_API_KEY`, `LLAMA_CPP_BASE_URL`, `LLAMA_CPP_URL`, `LLAMACPP_BASE_URL`, `LLAMA_CPP_API_KEY`, and `LLAMACPP_API_KEY`. It also recognizes base URL and API key variables prefixed `OPENROUTER`, `GROQ`, `TOGETHER`, `MISTRAL`, `DEEPSEEK`, and `XAI`. Provider-specific `*_MODEL` variables are used when set. Connections appear only when at least one relevant variable is set; local servers can also be added manually.
+
+For Bedrock Mantle, set `AWS_BEARER_TOKEN_BEDROCK` (or `BEDROCK_API_KEY`) and `AWS_REGION` (or `AWS_DEFAULT_REGION`), optionally `BEDROCK_MANTLE_BASE_URL` or `BEDROCK_MANTLE_URL` and `BEDROCK_MODEL`. Alternatively use `OPENAI_BASE_URL` and `OPENAI_API_KEY` with a Mantle endpoint. Mantle API-key authentication is supported; AWS credential signing and the native Bedrock Runtime API are not. Select a protocol and model supported by your Mantle endpoint. See [AWS Mantle endpoint documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/endpoints.html).
+
+Reasoning and image support vary by model and provider. ChaTTY sends Responses `reasoning.effort`, Chat Completions `reasoning_effort`, or Messages adaptive thinking with `output_config.effort`; leave reasoning empty if the endpoint does not support these parameters. Requests are non-streaming. Chat history remains in memory for the current session.
+
+ChaTTY uses only the Python standard library. Existing YAML configurations are not automatically migrated.
+
